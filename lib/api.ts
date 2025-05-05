@@ -10,6 +10,7 @@ export async function fetchWeatherData(location: string) {
 }
 
 export async function sendChatMessage(message: string) {
+  //
   // In a real app, this would be a call to your API gateway
   const response = await fetch(`${process.env.NEXT_PUBLIC_API_GATEWAY_URL}/chat`, {
     method: "POST",
