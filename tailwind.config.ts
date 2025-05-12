@@ -53,6 +53,15 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Neo-Brutalist pastel colors
+        "pastel-yellow": "#FDFD96",
+        "pastel-pink": "#FFB6C1",
+        "pastel-blue": "#AFEEEE",
+        "pastel-green": "#BDFCC9",
+        "pastel-purple": "#CBC3E3",
+        "pastel-orange": "#FFD8B1",
+        "pastel-red": "#FFA07A",
+        "pastel-cream": "#FFFDD0",
       },
       borderRadius: {
         lg: "var(--radius)",

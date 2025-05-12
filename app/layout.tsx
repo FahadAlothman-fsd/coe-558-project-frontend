@@ -1,14 +1,14 @@
 import type React from "react"
-import { ThemeProvider } from "@/components/theme-provider"
 import "./globals.css"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
+import { ThemeProvider } from "@/components/theme-provider"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "AI Chat with Weather",
-  description: "AI Chat application with weather widget",
+  title: "Neo-Brutalist AI Chat",
+  description: "A Neo-Brutalist AI chat application with weather widget and chat history",
   generator: 'v0.dev'
 }
 
@@ -20,7 +20,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           {children}
         </ThemeProvider>
