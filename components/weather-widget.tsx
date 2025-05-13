@@ -49,6 +49,7 @@ export default function WeatherWidget() {
     setLoading(true)
     try {
       const response = await fetch(`/api/weather?city=${encodeURIComponent(city)}`)
+      console.log("response", response)
 
       if (!response.ok) {
         throw new Error("City not found")
@@ -83,6 +84,11 @@ export default function WeatherWidget() {
     }
 
     setLoading(true)
+    toast({
+      title: "Fetching weather data",
+      description: "Please wait while we get your location",
+      variant: "default",
+    })
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         console.log("in getting curr pointion", position)
