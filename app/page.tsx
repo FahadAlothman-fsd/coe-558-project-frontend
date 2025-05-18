@@ -45,8 +45,8 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-pastel-cream p-4 md:p-8">
       <div className="max-w-6xl mx-auto space-y-8">
-        <h1 className="text-4xl md:text-5xl font-black text-pastel-blue mb-8 p-4 border-4 border-black bg-pastel-yellow inline-block shadow-brutal">
-          Neo-Brutalist AI Chat
+        <h1 className="text-4xl md:text-5xl font-black text-pastel-purple mb-8 p-4 border-4 border-black bg-pastel-yellow inline-block shadow-brutal">
+          AI Chat
         </h1>
 
         <div className="grid grid-cols-1 gap-8">

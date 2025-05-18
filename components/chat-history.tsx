@@ -118,9 +118,8 @@ export default function ChatHistory({ chats, onUpdate, onDelete, isLoading }: Ch
       {chats.map((chat) => (
         <Card
           key={chat.id}
-          className={`border-3 border-black p-4 ${
-            expandedChatId === chat.id ? "bg-pastel-cream" : "bg-white"
-          } shadow-brutal`}
+          className={`border-3 border-black p-4 ${expandedChatId === chat.id ? "bg-pastel-cream" : "bg-white"
+            } shadow-brutal`}
         >
           {editingChatId === chat.id ? (
             <form onSubmit={handleSubmit(submitEdit)} className="space-y-3">
