@@ -12,7 +12,8 @@ import { MarkdownRenderer } from "@/components/ui/markdown-renderer"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2, Send, ImageIcon, Mic, Video, X, Save, FileText, Cpu } from "lucide-react"
-import type { Chat } from "@/types/chat"
+import type { Chat, ImageSource } from "@/types/chat"
+import { createImageSource, getImageSrc } from "@/lib/utils"
 
 type ChatBoxProps = {
   onChatComplete: (chat: Chat) => void
@@ -31,8 +32,9 @@ type FormData = {
 export default function ChatBox({ onChatComplete, isLoading, setIsLoading }: ChatBoxProps) {
   const [response, setResponse] = useState<string>("")
   const [prevResponse, setPrevResponse] = useState<string>("")
+  const [isSavingChat, setIsSavingChat] = useState<boolean>(false)
 
-  const [responseImage, setResponseImage] = useState<string | null>(null)
+  const [responseImage, setResponseImage] = useState<ImageSource | null>(null)
   const [prevResponseImage, setPrevResponseImage] = useState<string | null>(null)
 
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
@@ -105,7 +107,7 @@ export default function ChatBox({ onChatComplete, isLoading, setIsLoading }: Cha
   }
 
   const saveChat = async (prompt: string, response: string, files: File[], imageUrl: string | null = null, model = "") => {
-    console.log(files)
+    setIsSavingChat(true)
     const chatData: Omit<Chat, "id"> = {
       prompt,
       response,
@@ -172,6 +174,10 @@ export default function ChatBox({ onChatComplete, isLoading, setIsLoading }: Cha
         variant: "destructive",
       })
     }
+    finally {
+
+      setIsSavingChat(false)
+    }
   }
 
   const onSubmit = async (data: FormData) => {
@@ -206,8 +212,9 @@ export default function ChatBox({ onChatComplete, isLoading, setIsLoading }: Cha
       setModel(result.model || "")
 
       if (taskType === "image") {
+        console.log("in retreving image")
         setResponse(result.text)
-        setResponseImage(result.imageUrl || "/placeholder.svg?key=generated-image&width=512&height=512")
+        setResponseImage(createImageSource(result.imageData, result.mimeType))
         setModel(result.model)
       } else {
         setResponse(result.text)
@@ -308,6 +315,7 @@ export default function ChatBox({ onChatComplete, isLoading, setIsLoading }: Cha
             type="button"
             onClick={() => fileInputRef.current?.click()}
             className="bg-pastel-purple hover:bg-pastel-purple/90 text-black border-3 border-black font-bold transform hover:-translate-y-1 transition-transform"
+            disabled={isLoading || isSavingChat}
           >
             <ImageIcon className="h-4 w-4 mr-2" />
             {taskType === "image" ? "Add Reference Image" : "Add Image"}
@@ -317,6 +325,7 @@ export default function ChatBox({ onChatComplete, isLoading, setIsLoading }: Cha
             type="button"
             onClick={() => audioInputRef.current?.click()}
             className="bg-pastel-orange hover:bg-pastel-orange/90 text-black border-3 border-black font-bold transform hover:-translate-y-1 transition-transform"
+            disabled={isLoading || isSavingChat}
           >
             <Mic className="h-4 w-4 mr-2" />
             {taskType === "image" ? "Add Reference Audio" : "Add Audio"}
@@ -327,6 +336,7 @@ export default function ChatBox({ onChatComplete, isLoading, setIsLoading }: Cha
             type="button"
             onClick={() => videoInputRef.current?.click()}
             className="bg-pastel-blue hover:bg-pastel-blue/90 text-black border-3 border-black font-bold transform hover:-translate-y-1 transition-transform"
+            disabled={isLoading || isSavingChat}
           >
             <Video className="h-4 w-4 mr-2" />
             {taskType === "image" ? "Add Reference Video" : "Add Video"}
@@ -352,7 +362,7 @@ export default function ChatBox({ onChatComplete, isLoading, setIsLoading }: Cha
 
           <Button
             type="submit"
-            disabled={isLoading || !promptValue}
+            disabled={isLoading || isSavingChat || !promptValue}
             className="bg-pastel-yellow hover:bg-pastel-yellow/90 text-black border-3 border-black font-bold transform hover:-translate-y-1 transition-transform"
           >
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
@@ -431,7 +441,7 @@ export default function ChatBox({ onChatComplete, isLoading, setIsLoading }: Cha
             <div className="flex flex-col items-center">
               <p className="mb-3">{response}</p>
               <img
-                src={responseImage || "/placeholder.svg"}
+                src={getImageSrc(responseImage) || "/placeholder.svg"}
                 alt="AI generated image"
                 className="border-3 border-black max-w-full h-auto"
               />
@@ -448,8 +458,10 @@ export default function ChatBox({ onChatComplete, isLoading, setIsLoading }: Cha
                 saveChat(prevPrompt, prevResponse, prevUploadedFiles, prevResponseImage, model)
               }
               className="mt-4 bg-pastel-green hover:bg-pastel-green/90 text-black border-3 border-black font-bold"
+              disabled={isSavingChat}
             >
-              <Save className="h-4 w-4 mr-2" />
+
+              {isSavingChat ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
               Save to History
             </Button>
           )}

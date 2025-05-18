@@ -4,6 +4,11 @@ export type FileInfo = {
   size: number
 }
 
+export type ImageSource = {
+  type: "base64" | "gcs" | "url"
+  data: string
+}
+
 export type TaskType = "text" | "image"
 
 export type Chat = {

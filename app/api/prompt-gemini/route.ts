@@ -26,7 +26,6 @@ export async function POST(request: Request) {
       body: apiFormData,
     })
 
-    console.log("GenAI API response:", apiResponse)
     // Handle API errors
     if (!apiResponse.ok) {
       const errorData = await apiResponse.json().catch(() => ({}))
@@ -39,12 +38,14 @@ export async function POST(request: Request) {
     // Format the response based on task type to maintain frontend compatibility
     if (task === "image") {
       // Handle image generation response
+      console.log(responseData)
 
       return NextResponse.json({
         text: "Image generated based on your prompt",
         imageData: responseData.content,
         model: responseData.model,
         processingTime: hasFiles ? "4.2s" : "3.5s",
+        mimeType: responseData.mime_type || "image/png",
       })
     } else {
       // Handle text generation response
