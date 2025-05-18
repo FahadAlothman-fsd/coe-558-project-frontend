@@ -82,6 +82,60 @@ const config = {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },
+      typography: {
+        DEFAULT: {
+          css: {
+            maxWidth: "100%",
+            color: "inherit",
+            a: {
+              color: "#3182ce",
+              "&:hover": {
+                color: "#2c5282",
+              },
+            },
+            strong: {
+              color: "inherit",
+            },
+            ol: {
+              li: {
+                "&::marker": {
+                  color: "inherit",
+                },
+              },
+            },
+            ul: {
+              li: {
+                "&::marker": {
+                  color: "inherit",
+                },
+              },
+            },
+            h1: {
+              color: "inherit",
+            },
+            h2: {
+              color: "inherit",
+            },
+            h3: {
+              color: "inherit",
+            },
+            h4: {
+              color: "inherit",
+            },
+            blockquote: {
+              color: "inherit",
+              borderLeftColor: "inherit",
+            },
+            code: {
+              color: "inherit",
+            },
+            pre: {
+              color: "inherit",
+              backgroundColor: "var(--tw-prose-pre-bg)",
+            },
+          },
+        },
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],

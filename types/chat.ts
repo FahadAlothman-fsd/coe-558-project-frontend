@@ -4,10 +4,15 @@ export type FileInfo = {
   size: number
 }
 
+export type TaskType = "text" | "image"
+
 export type Chat = {
   id: string
   prompt: string
   response: string
   files?: FileInfo[]
   timestamp: string
+  taskType?: TaskType
+  imageUrl?: string | null
+  model?: string
 }

@@ -5,8 +5,10 @@ import { useForm } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card } from "@/components/ui/card"
-import { Loader2, Edit, Trash2, ImageIcon, Mic, Video, ChevronDown, ChevronUp, Save, X } from "lucide-react"
-import type { Chat } from "@/types/chat"
+import { Loader2, Edit, Trash2, Mic, Video, ChevronDown, ChevronUp, Save, X, FileText, Cpu } from "lucide-react"
+import { MarkdownRenderer } from "@/components/ui/markdown-renderer"
+import { ImageIcon } from "lucide-react"
+import type { Chat, TaskType } from "@/types/chat"
 import { formatDistanceToNow } from "date-fns"
 
 type ChatHistoryProps = {
@@ -45,6 +47,7 @@ export default function ChatHistory({ chats, onUpdate, onDelete, isLoading }: Ch
       // First, get a new response from the AI
       const formData = new FormData()
       formData.append("prompt", data.prompt)
+      formData.append("task", chatToUpdate.taskType || "text")
 
       // If the chat had files, we would need to handle them here
       // For now, we'll just note that in the response
@@ -63,7 +66,17 @@ export default function ChatHistory({ chats, onUpdate, onDelete, isLoading }: Ch
       }
 
       const result = await aiResponse.json()
-      const newResponse = result.text + filesNote
+      let newResponse = ""
+      let newImageUrl = null
+
+      const newModel = result.model || chatToUpdate.model || ""
+
+      if (chatToUpdate.taskType === "image") {
+        newResponse = "Image generated based on your prompt:"
+        newImageUrl = result.imageUrl || "/placeholder.svg?key=edited-image&width=512&height=512"
+      } else {
+        newResponse = result.text + filesNote
+      }
 
       // Then update the chat with both the new prompt and response
       const response = await fetch(`/api/chats?id=${editingChatId}`, {
@@ -75,6 +88,8 @@ export default function ChatHistory({ chats, onUpdate, onDelete, isLoading }: Ch
           ...chatToUpdate,
           prompt: data.prompt,
           response: newResponse,
+          imageUrl: newImageUrl,
+          model: newModel,
         }),
       })
 
@@ -104,6 +119,12 @@ export default function ChatHistory({ chats, onUpdate, onDelete, isLoading }: Ch
       return <Video className="h-4 w-4" />
     }
     return null
+  }
+  const getTaskIcon = (taskType?: TaskType) => {
+    if (taskType === "image") {
+      return <ImageIcon className="h-4 w-4 mr-1" />
+    }
+    return <FileText className="h-4 w-4 mr-1" />
   }
 
   if (chats.length === 0) {
@@ -148,6 +169,12 @@ export default function ChatHistory({ chats, onUpdate, onDelete, isLoading }: Ch
             <>
               <div className="flex justify-between items-start">
                 <div className="flex-1">
+                  <div className="flex items-center mb-1">
+                    {getTaskIcon(chat.taskType)}
+                    <span className="text-xs font-medium bg-pastel-cream px-2 py-0.5 border-2 border-black">
+                      {chat.taskType === "image" ? "Image Generation" : "Text Generation"}
+                    </span>
+                  </div>
                   <p className="font-bold line-clamp-2">{chat.prompt}</p>
 
                   {chat.files && chat.files.length > 0 && (
@@ -203,27 +230,29 @@ export default function ChatHistory({ chats, onUpdate, onDelete, isLoading }: Ch
 
               {expandedChatId === chat.id && (
                 <div className="mt-4 border-t-2 border-black pt-3">
-                  <h4 className="font-bold mb-2">Response:</h4>
-                  <div className="whitespace-pre-wrap">
-                    {chat.response.includes("![image]") ? (
-                      <>
-                        {chat.response.split("![image]").map((part, index) => (
-                          <div key={index}>
-                            {part}
-                            {index < chat.response.split("![image]").length - 1 && (
-                              <img
-                                src="/placeholder.svg?key=bthjh"
-                                alt="AI generated image"
-                                className="my-2 border-2 border-black max-w-full h-auto"
-                              />
-                            )}
-                          </div>
-                        ))}
-                      </>
-                    ) : (
-                      chat.response
+                  <div className="flex items-center mb-3">
+                    <h4 className="font-bold text-xl">Response:</h4>
+                    {chat.model && (
+                      <div className="flex items-center ml-3 bg-pastel-purple px-3 py-1 border-3 border-black rounded-md">
+                        <Cpu className="h-5 w-5 mr-2" />
+                        <span className="font-bold text-xl">{chat.model}</span>
+                      </div>
                     )}
                   </div>
+                  {chat.taskType === "image" && chat.imageUrl ? (
+                    <div className="flex flex-col items-center">
+                      <p className="mb-3">{chat.response}</p>
+                      <img
+                        src={chat.imageUrl || "/placeholder.svg"}
+                        alt="AI generated image"
+                        className="border-3 border-black max-w-full h-auto"
+                      />
+                    </div>
+                  ) : (
+                    <div className="prose prose-sm max-w-none">
+                      <MarkdownRenderer content={chat.response} />
+                    </div>
+                  )}
                 </div>
               )}
             </>
