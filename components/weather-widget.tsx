@@ -39,10 +39,6 @@ export default function WeatherWidget() {
   } = useForm<WeatherFormData>()
 
 
-  const convertToFahrenheit = (celsius: number) => {
-    return Math.round((celsius * 9) / 5 + 32)
-  }
-
   const getWeatherIcon = (condition: string) => {
     switch (condition.toLowerCase()) {
       case "sunny":
@@ -62,14 +58,12 @@ export default function WeatherWidget() {
     setLoading(true)
     try {
       const response = await fetch(`/api/weather?city=${encodeURIComponent(city)}`)
-      console.log("response", response)
 
       if (!response.ok) {
         throw new Error("City not found")
       }
 
       const data = await response.json()
-      console.log("data", data)
       setWeather({
         city: data.city,
         temperature: {
@@ -108,10 +102,8 @@ export default function WeatherWidget() {
     })
     navigator.geolocation.getCurrentPosition(
       async (position) => {
-        console.log("in getting curr pointion", position)
         try {
           const { latitude, longitude } = position.coords
-          console.log("in getting curr pointion", position)
           const response = await fetch(`/api/weather?lat=${latitude}&lon=${longitude}`)
 
           if (!response.ok) {
@@ -130,7 +122,6 @@ export default function WeatherWidget() {
           })
         } catch (error) {
 
-          console.log("fasdfas")
           toast({
             title: "Error",
             description: "Failed to fetch weather data for your location",
