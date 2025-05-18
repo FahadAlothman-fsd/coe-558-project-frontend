@@ -29,12 +29,12 @@ export function MarkdownRenderer({ content, className = "" }: MarkdownRendererPr
           blockquote: ({ node, ...props }) => (
             <blockquote className="border-l-4 border-gray-300 pl-4 italic my-4" {...props} />
           ),
-          code: ({ node, inline, ...props }) =>
-            inline ? (
-              <code className="bg-gray-100 px-1 py-0.5 rounded font-mono text-sm" {...props} />
-            ) : (
-              <code className="block bg-gray-100 p-2 rounded font-mono text-sm overflow-x-auto my-4" {...props} />
-            ),
+          code: ({ node, ...props }) =>
+            // inline ? (
+            //   <code className="bg-gray-100 px-1 py-0.5 rounded font-mono text-sm" {...props} />
+            // ) : (
+            <code className="block bg-gray-100 p-2 rounded font-mono text-sm overflow-x-auto my-4" {...props} />
+          ,
           pre: ({ node, ...props }) => <pre className="bg-gray-100 p-4 rounded overflow-x-auto my-4" {...props} />,
           strong: ({ node, ...props }) => <strong className="font-bold" {...props} />,
           em: ({ node, ...props }) => <em className="italic" {...props} />,
