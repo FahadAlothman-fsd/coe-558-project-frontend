@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card } from "@/components/ui/card"
-import { Loader2, Edit, Trash2, ImageIcon, Mic, ChevronDown, ChevronUp, Save, X } from "lucide-react"
+import { Loader2, Edit, Trash2, ImageIcon, Mic, Video, ChevronDown, ChevronUp, Save, X } from "lucide-react"
 import type { Chat } from "@/types/chat"
 import { formatDistanceToNow } from "date-fns"
 
@@ -100,6 +100,8 @@ export default function ChatHistory({ chats, onUpdate, onDelete, isLoading }: Ch
       return <ImageIcon className="h-4 w-4" />
     } else if (type.startsWith("audio/")) {
       return <Mic className="h-4 w-4" />
+    } else if (type.startsWith("video/")) {
+      return <Video className="h-4 w-4" />
     }
     return null
   }
@@ -114,7 +116,7 @@ export default function ChatHistory({ chats, onUpdate, onDelete, isLoading }: Ch
   }
 
   return (
-    <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+    <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 pb-2">
       {chats.map((chat) => (
         <Card
           key={chat.id}

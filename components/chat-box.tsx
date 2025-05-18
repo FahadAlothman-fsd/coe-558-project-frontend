@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, Send, ImageIcon, Mic, X } from "lucide-react"
+import { Loader2, Send, ImageIcon, Mic, Video, X, Save } from "lucide-react"
 import type { Chat } from "@/types/chat"
 
 type ChatBoxProps = {
@@ -28,6 +28,7 @@ export default function ChatBox({ onChatComplete, isLoading, setIsLoading }: Cha
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const audioInputRef = useRef<HTMLInputElement>(null)
+  const videoInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
   const [isSaved, setIsSaved] = useState<boolean>(false)
 
@@ -152,6 +153,18 @@ export default function ChatBox({ onChatComplete, isLoading, setIsLoading }: Cha
     }
   }
 
+
+  const getFileTypeIcon = (file: File) => {
+    if (file.type.startsWith("image/")) {
+      return <ImageIcon className="h-4 w-4" />
+    } else if (file.type.startsWith("audio/")) {
+      return <Mic className="h-4 w-4" />
+    } else if (file.type.startsWith("video/")) {
+      return <Video className="h-4 w-4" />
+    }
+    return null
+  }
+
   return (
     <div className="space-y-4">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -179,6 +192,16 @@ export default function ChatBox({ onChatComplete, isLoading, setIsLoading }: Cha
           >
             <Mic className="h-4 w-4 mr-2" />
             Add Audio
+          </Button>
+
+
+          <Button
+            type="button"
+            onClick={() => videoInputRef.current?.click()}
+            className="bg-pastel-blue hover:bg-pastel-blue/90 text-black border-3 border-black font-bold transform hover:-translate-y-1 transition-transform"
+          >
+            <Video className="h-4 w-4 mr-2" />
+            Add Video
           </Button>
 
           <div className="flex items-center space-x-2 ml-auto">
@@ -215,6 +238,15 @@ export default function ChatBox({ onChatComplete, isLoading, setIsLoading }: Cha
           className="hidden"
           multiple
         />
+
+        <input
+          type="file"
+          ref={videoInputRef}
+          onChange={handleFileUpload}
+          accept="video/*"
+          className="hidden"
+          multiple
+        />
       </form>
 
       {uploadedFiles.length > 0 && (
@@ -223,7 +255,8 @@ export default function ChatBox({ onChatComplete, isLoading, setIsLoading }: Cha
           <div className="flex flex-wrap gap-2">
             {uploadedFiles.map((file, index) => (
               <div key={index} className="flex items-center bg-pastel-cream p-2 border-2 border-black">
-                <span className="text-sm truncate max-w-[150px]">{file.name}</span>
+                {getFileTypeIcon(file)}
+                <span className="text-sm truncate max-w-[150px] ml-1">{file.name}</span>
                 <span className="text-xs ml-2">({(file.size / 1024).toFixed(1)} KB)</span>
                 <Button
                   type="button"
@@ -258,10 +291,11 @@ export default function ChatBox({ onChatComplete, isLoading, setIsLoading }: Cha
               </div>
             )}
           </div>
-          {!isSaved && !isLoading && (
+          {!isLoading && (
             <Button
               onClick={() => saveChat(promptValue, response, uploadedFiles)}
               className="mt-4 bg-pastel-green hover:bg-pastel-green/90 text-black border-3 border-black font-bold"
+              disabled={isSaved}
             >
               Save to History
             </Button>
