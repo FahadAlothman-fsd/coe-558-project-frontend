@@ -14,7 +14,10 @@ export function cn(...inputs: ClassValue[]) {
  * @param mimeType The MIME type of the image (e.g., 'image/png', 'image/jpeg')
  * @returns A properly formatted data URL
  */
-export function createDataUrl(base64Data: string, mimeType = "image/png"): string {
+export function createDataUrl(base64Data: string, mimeType = "image/png"): {
+  url: string,
+  blob: Blob
+} {
   // Convert Latin-1 string back to binary
   const binaryString = atob(base64Data);
   const bytes = new Uint8Array(binaryString.length);
@@ -24,7 +27,10 @@ export function createDataUrl(base64Data: string, mimeType = "image/png"): strin
 
   const blob = new Blob([bytes], { type: mimeType });
   const url = URL.createObjectURL(blob);
-  return url
+  return {
+    "url": url,
+    "blob": blob,
+  }
 }
 
 /**
@@ -46,19 +52,14 @@ export function isGoogleCloudStorageUrl(url: string): boolean {
  * Automatically detects if it's base64, GCS URL, or regular URL
  */
 export function createImageSource(imageData: string, mimeType?: string): ImageSource {
-  if (isBase64Image(imageData)) {
-    return { type: "base64", data: imageData }
-    console.log("in raw base64")
-  } else if (isGoogleCloudStorageUrl(imageData)) {
+  if (isGoogleCloudStorageUrl(imageData)) {
     return { type: "gcs", data: imageData }
   } else if (mimeType) {
     // If we have a mime type and the data doesn't have a prefix,
     // assume it's a raw base64 string and create a data URL
-    console.log("in raw base64")
     return { type: "base64", data: createDataUrl(imageData, mimeType) }
   } else {
     // If we can't determine the type, treat it as a URL
-    console.log("in no type")
     return { type: "url", data: imageData }
   }
 }
@@ -68,6 +69,9 @@ export function createImageSource(imageData: string, mimeType?: string): ImageSo
  */
 export function getImageSrc(image: ImageSource | null | undefined): string {
   if (!image) return ""
+  if (image.type === "base64") {
+    return image.data.url
+  }
   return image.data
 }
 

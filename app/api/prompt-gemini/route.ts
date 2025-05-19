@@ -49,6 +49,7 @@ export async function POST(request: Request) {
       })
     } else {
       // Handle text generation response
+      console.log(responseData)
       return NextResponse.json({
         text: responseData.content || "",
         model: responseData.model,

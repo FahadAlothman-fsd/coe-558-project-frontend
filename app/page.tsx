@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import WeatherWidget from "@/components/weather-widget"
 import ChatBox from "@/components/chat-box"
 import ChatHistory from "@/components/chat-history"
-import type { Chat } from "@/types/chat"
+import type { Chat, ResponseChat } from "@/types/chat"
 
 export default function Home() {
   const [chats, setChats] = useState<Chat[]>([])
@@ -15,8 +15,35 @@ export default function Home() {
     const fetchChats = async () => {
       try {
         const response = await fetch("/api/chats")
-        const data = await response.json()
-        setChats(data)
+        const data = await response.json() as ResponseChat[]
+
+        const chats: Chat[] = data.map((chat) => ({
+          id: chat.id,
+          prompt: chat.prompt.text,
+          response: chat.response.text,
+          files: chat.prompt.files.map((file) => ({
+            name: file.filename,
+            type: file.type,
+            size: 0,
+            data: file.url,
+          })),
+          timestamp: chat.created_at,
+          taskType: chat.task,
+          imageUrl: chat.response.files.length > 0 ?
+            {
+              type: 'gcs',
+              data: chat.response.files[0].url,
+              filename: chat.response.files[0].filename,
+              mimetype: chat.response.files[0].type,
+
+
+            } : null, // Assuming no image URL for now
+          model: chat.model,
+        }))
+        console.log(chats)
+
+        setChats(chats)
+
       } catch (error) {
         console.error("Failed to fetch chats:", error)
       }

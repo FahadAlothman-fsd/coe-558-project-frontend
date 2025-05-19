@@ -243,7 +243,7 @@ export default function ChatHistory({ chats, onUpdate, onDelete, isLoading }: Ch
                     <div className="flex flex-col items-center">
                       <p className="mb-3">{chat.response}</p>
                       <img
-                        src={chat.imageUrl || "/placeholder.svg"}
+                        src={chat.imageUrl.type !== 'base64' ? chat.imageUrl.data : "/placeholder.svg"}
                         alt="AI generated image"
                         className="border-3 border-black max-w-full h-auto"
                       />

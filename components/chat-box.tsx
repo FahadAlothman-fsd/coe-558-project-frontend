@@ -12,7 +12,7 @@ import { MarkdownRenderer } from "@/components/ui/markdown-renderer"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2, Send, ImageIcon, Mic, Video, X, Save, FileText, Cpu } from "lucide-react"
-import type { Chat, ImageSource } from "@/types/chat"
+import type { Chat, ImageSource, ResponseChat } from "@/types/chat"
 import { createImageSource, getImageSrc } from "@/lib/utils"
 
 type ChatBoxProps = {
@@ -35,7 +35,7 @@ export default function ChatBox({ onChatComplete, isLoading, setIsLoading }: Cha
   const [isSavingChat, setIsSavingChat] = useState<boolean>(false)
 
   const [responseImage, setResponseImage] = useState<ImageSource | null>(null)
-  const [prevResponseImage, setPrevResponseImage] = useState<string | null>(null)
+  const [prevResponseImage, setPrevResponseImage] = useState<ImageSource | null>(null)
 
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
   const [prevUploadedFiles, setPrevUploadedFiles] = useState<File[]>([])
@@ -106,7 +106,7 @@ export default function ChatBox({ onChatComplete, isLoading, setIsLoading }: Cha
     setUploadedFiles((prev) => prev.filter((_, i) => i !== index))
   }
 
-  const saveChat = async (prompt: string, response: string, files: File[], imageUrl: string | null = null, model = "") => {
+  const saveChat = async (prompt: string, response: string, files: File[], imageUrl: ImageSource | null = null, model = "") => {
     setIsSavingChat(true)
     const chatData: Omit<Chat, "id"> = {
       prompt,
@@ -134,22 +134,45 @@ export default function ChatBox({ onChatComplete, isLoading, setIsLoading }: Cha
       formData.append("files", file)
     })
 
-    if (imageUrl) {
-      formData.append("image_url", imageUrl)
+    if (imageUrl && imageUrl.type === 'base64') {
+      formData.append("generated_image", imageUrl.data.blob)
 
     }
 
     try {
 
-      console.log(formData)
       const saveResponse = await fetch("/api/chats", {
         method: "POST",
         body: formData,
       })
 
       if (saveResponse.ok) {
-        const savedChat = await saveResponse.json()
-        onChatComplete(savedChat)
+        const savedChat = await saveResponse.json() as ResponseChat
+        const chat: Chat = {
+          id: savedChat.id,
+          prompt: savedChat.prompt.text,
+          response: savedChat.response.text,
+          files: savedChat.prompt.files.map((file) => ({
+            name: file.filename,
+            type: file.type,
+            size: 0,
+            data: file.url,
+          })),
+          timestamp: savedChat.created_at,
+          taskType: savedChat.task,
+          imageUrl: savedChat.response.files.length > 0 ?
+            {
+              type: 'gcs',
+              data: savedChat.response.files[0].url,
+              filename: savedChat.response.files[0].filename,
+              mimetype: savedChat.response.files[0].type,
+
+
+            } : null, // Assuming no image URL for now
+          model: savedChat.model,
+        }
+
+        onChatComplete(chat)
         // Reset Prev Image
         // Reset Prev files
         // Reset Prompt
@@ -157,7 +180,7 @@ export default function ChatBox({ onChatComplete, isLoading, setIsLoading }: Cha
 
         setPrevUploadedFiles([])
         setPrevResponse("")
-        setPrevResponseImage("")
+        setPrevResponseImage(null)
         setPrevPrompt("")
 
 
@@ -190,6 +213,7 @@ export default function ChatBox({ onChatComplete, isLoading, setIsLoading }: Cha
     setPrevUploadedFiles([]) // Reset previous uploaded files
 
     try {
+      console.log(data)
       const formData = new FormData()
       formData.append("prompt", data.prompt)
       formData.append("task", taskType)
@@ -208,6 +232,7 @@ export default function ChatBox({ onChatComplete, isLoading, setIsLoading }: Cha
       }
 
       const result = await response.json()
+      console.log(result)
 
       setModel(result.model || "")
 
@@ -231,12 +256,14 @@ export default function ChatBox({ onChatComplete, isLoading, setIsLoading }: Cha
         )
         setIsSaved(true)
       } else {
-        console.log("saving previous for save chat")
-        console.log(uploadedFiles)
+        console.log(result.text)
         setPrevPrompt(data.prompt)
         setPrevUploadedFiles(uploadedFiles)
-        setPrevResponseImage(taskType === "image" ? result.imageUrl || "/placeholder.svg?key=generated-image&width=512&height=512" : null)
+        if (taskType === "image") {
+          setPrevResponseImage(createImageSource(result.imageData, result.mimeType))
+        }
         setPrevResponse(result.text)
+        console.log("prevResponse", prevResponse)
 
 
       }
@@ -250,6 +277,7 @@ export default function ChatBox({ onChatComplete, isLoading, setIsLoading }: Cha
       setUploadedFiles([])
 
     } catch (error) {
+      console.log(error)
       toast({
         title: "Error",
         description: "Failed to process your request. Please try again.",

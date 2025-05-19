@@ -25,15 +25,27 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const id = searchParams.get("id")
 
-  if (id) {
-    const chat = chats.find((c) => c.id === id)
-    if (!chat) {
-      return NextResponse.json({ error: "Chat not found" }, { status: 404 })
-    }
-    return NextResponse.json(chat)
-  }
+  try {
 
-  return NextResponse.json(chats)
+    let url = " http://127.0.0.1:8000"
+    // Forward the FormData directly to the API
+    const response = await fetch(`${url}/api/v1/chats`, {
+      method: "GET",
+    })
+
+    if (!response.ok) {
+      throw new Error(`Chats API responded with status: ${response.status}`)
+    }
+
+    const all_chats = await response.json()
+
+
+    console.log(all_chats)
+    return NextResponse.json(all_chats)
+
+  } catch (error) {
+    return NextResponse.json({ error: "Failed to read chats" }, { status: 500 })
+  }
 }
 
 export async function POST(request: Request) {
@@ -41,12 +53,11 @@ export async function POST(request: Request) {
 
     const formData = await request.formData()
     const prompt = formData.get("prompt") as string
-    const generatedResponse = formData.get("model") as string
+    const generatedResponse = formData.get("response") as string
     const task = (formData.get("task") as string) || "text"
     const model = formData.get("model") as string
     const files = formData.getAll("files") as File[]
     const generated_image = formData.get("generated_image") as File
-    console.log("FormData received:", formData)
 
     const newformData = new FormData()
     newformData.append("prompt", prompt)
@@ -57,15 +68,13 @@ export async function POST(request: Request) {
 
     files.forEach((file) => {
       newformData.append("files", file)
-      console.log(file)
     })
 
     if (generated_image) {
-      newformData.append("image_url", generated_image)
+      newformData.append("generated_image", generated_image)
 
     }
 
-    console.log("FormData to be sent:", newformData)
 
     let url = " http://127.0.0.1:8000"
     // Forward the FormData directly to the API
@@ -81,7 +90,6 @@ export async function POST(request: Request) {
     return NextResponse.json(savedChat)
 
   } catch (error) {
-    console.error("Create chat error:", error)
     return NextResponse.json({ error: "Failed to create chat" }, { status: 500 })
   }
 }
@@ -111,7 +119,6 @@ export async function PUT(request: Request) {
 
     return NextResponse.json(updatedChat)
   } catch (error) {
-    console.error("Update chat error:", error)
     return NextResponse.json({ error: "Failed to update chat" }, { status: 500 })
   }
 }
