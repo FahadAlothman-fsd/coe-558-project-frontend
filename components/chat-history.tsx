@@ -8,7 +8,9 @@ import { Card } from "@/components/ui/card"
 import { Loader2, Edit, Trash2, Mic, Video, ChevronDown, ChevronUp, Save, X, FileText, Cpu } from "lucide-react"
 import { MarkdownRenderer } from "@/components/ui/markdown-renderer"
 import { ImageIcon } from "lucide-react"
-import type { Chat, TaskType } from "@/types/chat"
+import type { Chat, TaskType, ImageSource } from "@/types/chat"
+import { createImageSource } from "@/lib/utils"
+import { fetchBlobFromUrl } from "@/lib/utils"
 import { formatDistanceToNow } from "date-fns"
 
 type ChatHistoryProps = {
@@ -49,12 +51,18 @@ export default function ChatHistory({ chats, onUpdate, onDelete, isLoading }: Ch
       formData.append("prompt", data.prompt)
       formData.append("task", chatToUpdate.taskType || "text")
 
+      if (chatToUpdate.files) {
+        chatToUpdate.files.forEach(async (file) => {
+          if (file.url) {
+            const blob = await fetchBlobFromUrl(file.url)
+            formData.append("files", new File([blob], file.name, { type: file.type }))
+          }
+
+        })
+      }
+
       // If the chat had files, we would need to handle them here
       // For now, we'll just note that in the response
-      const filesNote =
-        chatToUpdate.files && chatToUpdate.files.length > 0
-          ? "\n\n(Note: This is a regenerated response. The original had attached files that were not reprocessed.)"
-          : ""
 
       const aiResponse = await fetch("/api/prompt-gemini", {
         method: "POST",
@@ -66,31 +74,29 @@ export default function ChatHistory({ chats, onUpdate, onDelete, isLoading }: Ch
       }
 
       const result = await aiResponse.json()
-      let newResponse = ""
-      let newImageUrl = null
 
-      const newModel = result.model || chatToUpdate.model || ""
+
+
+
+      const putFormData = new FormData()
+      putFormData.append("prompt", data.prompt)
+      putFormData.append("response", result.text)
 
       if (chatToUpdate.taskType === "image") {
-        newResponse = "Image generated based on your prompt:"
-        newImageUrl = result.imageUrl || "/placeholder.svg?key=edited-image&width=512&height=512"
+        chatToUpdate.response = result.text
+        let newGeneratedImage = createImageSource(result.imageData, result.mimeType)
+
+        if (newGeneratedImage.type === 'base64') {
+          putFormData.append("generated_image", newGeneratedImage.data.blob)
+        }
       } else {
-        newResponse = result.text + filesNote
+        chatToUpdate.response = result.text
       }
 
       // Then update the chat with both the new prompt and response
       const response = await fetch(`/api/chats?id=${editingChatId}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...chatToUpdate,
-          prompt: data.prompt,
-          response: newResponse,
-          imageUrl: newImageUrl,
-          model: newModel,
-        }),
+        body: putFormData,
       })
 
       if (response.ok) {

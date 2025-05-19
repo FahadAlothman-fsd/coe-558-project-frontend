@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import type { Chat } from "@/types/chat"
+import type { Chat, ResponseChat } from "@/types/chat"
 
 // In-memory storage for demo purposes
 // In a real app, you would use a database
@@ -103,21 +103,61 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "Chat ID is required" }, { status: 400 })
     }
 
-    const body = await request.json()
-    const chatIndex = chats.findIndex((c) => c.id === id)
+    const formData = await request.formData()
+    console.log(formData.get("prompt"))
+    const prompt = formData.get("prompt") as string
+    const generatedResponse = formData.get("response") as string
+    const generated_image = formData.get("generated_image") as File
 
-    if (chatIndex === -1) {
-      return NextResponse.json({ error: "Chat not found" }, { status: 404 })
+    const newformData = new FormData()
+    newformData.append("prompt", prompt)
+    newformData.append("response", generatedResponse)
+
+
+
+    if (generated_image) {
+      newformData.append("generated_image", generated_image)
+
     }
 
-    const updatedChat = {
-      ...chats[chatIndex],
-      ...body,
+
+    let url = " http://127.0.0.1:8000"
+    // Forward the FormData directly to the API
+    const response = await fetch(`${url}/api/v1/chats/${id}`, {
+      method: "PUT",
+      body: newformData,
+    })
+
+    if (!response.ok) {
+      throw new Error(`Chats API responded with status: ${response.status}`)
     }
 
-    chats[chatIndex] = updatedChat
+    const savedChat = await response.json() as ResponseChat
 
-    return NextResponse.json(updatedChat)
+    const chat: Chat = {
+      id: savedChat.id,
+      prompt: savedChat.prompt.text,
+      response: savedChat.response.text,
+      files: savedChat.prompt.files.map((file) => ({
+        name: file.filename,
+        type: file.type,
+        size: 0,
+        data: file.url,
+      })),
+      timestamp: savedChat.created_at,
+      taskType: savedChat.task,
+      imageUrl: savedChat.response.files.length > 0 ?
+        {
+          type: 'gcs',
+          data: savedChat.response.files[0].url,
+          filename: savedChat.response.files[0].filename,
+          mimetype: savedChat.response.files[0].type,
+
+
+        } : null, // Assuming no image URL for now
+      model: savedChat.model,
+    }
+    return NextResponse.json(chat)
   } catch (error) {
     return NextResponse.json({ error: "Failed to update chat" }, { status: 500 })
   }
@@ -131,12 +171,21 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Chat ID is required" }, { status: 400 })
   }
 
-  const initialLength = chats.length
-  chats = chats.filter((c) => c.id !== id)
 
-  if (chats.length === initialLength) {
-    return NextResponse.json({ error: "Chat not found" }, { status: 404 })
+  try {
+    let url = " http://127.0.0.1:8000"
+    // Forward the FormData directly to the API
+    const response = await fetch(`${url}/api/v1/chats/${id}`, {
+      method: "DELETE",
+    })
+
+    if (!response.ok) {
+      return NextResponse.json({ error: "Chat not found" }, { status: 404 })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    return NextResponse.json({ error: "Failed to delete chat" }, { status: 500 })
   }
 
-  return NextResponse.json({ success: true })
 }
