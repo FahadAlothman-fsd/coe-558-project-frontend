@@ -380,6 +380,7 @@ export default function ChatBox({ onChatComplete, isLoading, setIsLoading }: Cha
                   checked={field.value}
                   onCheckedChange={field.onChange}
                   className="data-[state=checked]:bg-pastel-green"
+                  disabled
                 />
               )}
             />
