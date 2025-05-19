@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     })
 
     // Call the external GenAI API
-    const apiResponse = await fetch("https://cloud-services-gateway-ckvqjx02.uc.gateway.dev/genai-prompt", {
+    const apiResponse = await fetch(`${process.env.API_GATEWAY_URL}/genai-prompt`, {
       method: "POST",
       body: apiFormData,
     })

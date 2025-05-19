@@ -27,7 +27,7 @@ export async function GET(request: Request) {
 
   try {
 
-    let url = " http://127.0.0.1:8000"
+    let url = `${process.env.API_GATEWAY_URL}`
     // Forward the FormData directly to the API
     const response = await fetch(`${url}/api/v1/chats`, {
       method: "GET",
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
     }
 
 
-    let url = " http://127.0.0.1:8000"
+    let url = `${process.env.API_GATEWAY_URL}`
     // Forward the FormData directly to the API
     const response = await fetch(`${url}/api/v1/chats`, {
       method: "POST",
@@ -121,7 +121,7 @@ export async function PUT(request: Request) {
     }
 
 
-    let url = " http://127.0.0.1:8000"
+    let url = `${process.env.API_GATEWAY_URL}`
     // Forward the FormData directly to the API
     const response = await fetch(`${url}/api/v1/chats/${id}`, {
       method: "PUT",
@@ -173,7 +173,7 @@ export async function DELETE(request: Request) {
 
 
   try {
-    let url = " http://127.0.0.1:8000"
+    let url = `${process.env.API_GATEWAY_URL}`
     // Forward the FormData directly to the API
     const response = await fetch(`${url}/api/v1/chats/${id}`, {
       method: "DELETE",

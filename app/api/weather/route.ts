@@ -38,7 +38,7 @@ export async function GET(request: Request) {
     params.append("lon", lon);
   }
 
-  const endpoint = `https://cloud-services-gateway-ckvqjx02.uc.gateway.dev/weather?${params.toString()}`;
+  const endpoint = `${process.env.API_GATEWAY_URL}/weather?${params.toString()}`;
 
   try {
     const response = await fetch(endpoint);
